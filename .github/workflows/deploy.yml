@@ -6,9 +6,15 @@ on:
     branches:
       - main
 
+# Prevent overlapping workflow runs
+concurrency:
+  group: task-3-49-main
+  cancel-in-progress: true
+
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     permissions:
       contents: read
@@ -26,6 +32,7 @@ jobs:
 
       - name: Verify AWS identity
         run: aws sts get-caller-identity
+
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
