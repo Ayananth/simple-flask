@@ -18,38 +18,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Verify GitHub OIDC claims
-        shell: bash
-        run: |
-          set -e
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::956880924156:role/task-3-49-github-actions-role
+          aws-region: us-east-1
 
-          RESPONSE=$(curl -sS \
-            -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
-            "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=sts.amazonaws.com")
-
-          TOKEN=$(echo "$RESPONSE" | jq -r '.value')
-
-          if [ -z "$TOKEN" ] || [ "$TOKEN" = "null" ]; then
-            echo "Failed to obtain OIDC token"
-            exit 1
-          fi
-
-          OIDC_TOKEN="$TOKEN" python3 - <<'PY'
-          import os
-          import json
-          import base64
-
-          token = os.environ["OIDC_TOKEN"]
-          payload = token.split(".")[1]
-          payload += "=" * (-len(payload) % 4)
-
-          claims = json.loads(base64.urlsafe_b64decode(payload))
-
-          for key in ["iss", "aud", "sub", "repository",
-                      "repository_id", "repository_owner_id"]:
-              print(f"{key}: {claims.get(key)}")
-          PY
-
+      - name: Verify AWS identity
+        run: aws sts get-caller-identity
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
