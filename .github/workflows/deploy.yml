@@ -45,3 +45,12 @@ jobs:
           context: .
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/task-3-49-app:latest
+
+
+      - name: Deploy to Amazon ECS
+        run: |
+          aws ecs update-service \
+            --cluster task-3-49-cluster \
+            --service task-3-49-service \
+            --force-new-deployment
+
